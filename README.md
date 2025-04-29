@@ -30,10 +30,7 @@ An IoT-based automated attendance system using facial recognition, built for Ras
 # Clone the repository  
 git clone https://github.com/yourusername/smart-attendance.git  
 cd smart-attendance  
-
-# Install dependencies  
-pip install -r requirements.txt  
-
+ 
 # Initialize database  
 python s1.py  
 
