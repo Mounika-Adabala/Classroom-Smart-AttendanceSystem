@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Take Attendance{% endblock %}
+
+{% block extra_css %}
+<style>
+    #camera-container {
+        position: relative;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    #camera-feed {
+        width: 100%;
+        background-color: #f0f0f0;
+    }
+    #capture-btn {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+    }
+    .processing-message {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .results-container {
+        display: none;
+        margin-top: 20px;
+    }
+    .result-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .result-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Take Attendance</h5>
+            </div>
+            <div class="card-body">
+                {% if not show_camera %}
+                <form method="POST" action="{{ url_for('take_attendance') }}">
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Select Subject</label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="PYTHON" selected>PYTHON</option>
+                            <option value="OS">OS</option>
+                            <option value="DBMS">DBMS</option>
+                            <option value="DS">DS</option>
+                            <option value="DMDW">DMDW</option>
+                        </select>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Start Attendance Recording
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div id="camera-container">
+                    <img id="camera-feed" src="{{ url_for('video_feed') }}">
+                    <button id="capture-btn" class="btn btn-primary btn-lg">
+                        <i class="bi bi-camera-fill"></i> Capture
+                    </button>
+                </div>
+                
+                <div id="processing-message" class="processing-message">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <h5 class="mt-3">Processing Attendance...</h5>
+                </div>
+                
+                <div id="results-container" class="results-container">
+                    <h5>Attendance Results</h5>
+                    <div id="results-list"></div>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Done
+                        </a>
+                    </div>
+                </div>
+                
+                <form id="attendance-form" method="POST" action="{{ url_for('process_attendance') }}" style="display: none;">
+                    <input type="hidden" name="subject" value="{{ subject }}">
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if show_camera %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const captureBtn = document.getElementById('capture-btn');
+    const processingMessage = document.getElementById('processing-message');
+    const resultsContainer = document.getElementById('results-container');
+    const resultsList = document.getElementById('results-list');
+    const attendanceForm = document.getElementById('attendance-form');
+    
+    captureBtn.addEventListener('click', function() {
+        // Show processing message
+        processingMessage.style.display = 'block';
+        
+        // Hide capture button
+        captureBtn.style.display = 'none';
+        
+        // Submit the form
+        fetch('/process_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `subject={{ subject }}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide processing message
+            processingMessage.style.display = 'none';
+            
+            // Show results
+            resultsContainer.style.display = 'block';
+            
+            // Populate results
+            resultsList.innerHTML = '';
+            data.forEach(result => {
+                const statusClass = result.status === 'Recognized' ? 'text-success' : 'text-danger';
+                const confidencePercent = result.confidence ? Math.round(result.confidence * 100) : 0;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <span><strong>${result.name || result.student_id}</strong></span>
+                        <span class="${statusClass}">${result.status}</span>
+                    </div>
+                    ${result.confidence ? `
+                    <div class="progress mt-2">
+                        <div class="progress-bar ${statusClass.replace('text', 'bg')}" 
+                             role="progressbar" 
+                             style="width: ${confidencePercent}%" 
+                             aria-valuenow="${confidencePercent}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            ${confidencePercent}%
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                resultsList.appendChild(resultItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            processingMessage.innerHTML = `
+                <div class="alert alert-danger">
+                    Error processing attendance: ${error.message}
+                </div>
+                <a href="{{ url_for('take_attendance') }}" class="btn btn-warning mt-2">
+                    Try Again
+                </a>
+            `;
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}System Metrics{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>System Performance Metrics</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4>Face Recognition Accuracy</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>True Acceptance Rate (TAR)</td>
+                        <td>{{ accuracy_metrics.TAR }}%</td>
+                    </tr>
+                    <tr>
+                        <td>False Acceptance Rate (FAR)</td>
+                        <td>{{ accuracy_metrics.FAR }}%</td>
+                    </tr>
+                    <tr>
+                        <td>False Rejection Rate (FRR)</td>
+                        <td>{{ accuracy_metrics.FRR }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Overall Accuracy</td>
+                        <td>{{ accuracy_metrics['Overall Accuracy'] }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Total Recognition Attempts</td>
+                        <td>{{ accuracy_metrics['Total Attempts'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4>Hardware Performance</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Frames Processed Per Second (FPS)</td>
+                        <td>{{ hardware_metrics.FPS }}</td>
+                    </tr>
+                    <tr>
+                        <td>Face Detection Latency</td>
+                        <td>{{ hardware_metrics['Face Detection Latency (ms)'] }} ms</td>
+                    </tr>
+                    <tr>
+                        <td>Recognition Latency</td>
+                        <td>{{ hardware_metrics['Recognition Latency (ms)'] }} ms</td>
+                    </tr>
+                    <tr>
+                        <td>Power Consumption</td>
+                        <td>{{ hardware_metrics['Power Consumption (W)'] }} Watts</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
